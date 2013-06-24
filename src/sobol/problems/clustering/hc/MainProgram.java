@@ -19,7 +19,6 @@ public class MainProgram
 		"data\\cluster\\jxlsreader 27C.odem",
 		"data\\cluster\\seemp 31C.odem",
 		"data\\cluster\\apache_zip 36C.odem",
-		/*"data\\cluster\\notepad_model 46C.odem",*/
 		"data\\cluster\\udtjava 56C.odem",
 		"data\\cluster\\javaocr 59C.odem",
 		"data\\cluster\\pfcda_base 67C.odem",
