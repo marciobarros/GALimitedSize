@@ -2,6 +2,7 @@ package sobol.problems.clustering.generic.reader;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import javax.management.modelmbean.XMLParseException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -9,6 +10,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import sobol.problems.clustering.generic.model.DependencyType;
 import sobol.problems.clustering.generic.model.ElementType;
@@ -20,7 +23,7 @@ import sobol.problems.clustering.generic.model.ProjectPackage;
 public class CDAReader
 {
 	/**
-	 * Carrega um arquivo XML para a memória
+	 * Carrega um arquivo XML para a memï¿½ria
 	 */
 	private Document loadDocument(String filename) throws XMLParseException
 	{
@@ -30,6 +33,7 @@ public class CDAReader
 		try
 		{
 			DocumentBuilder db = dbf.newDocumentBuilder();
+            db.setEntityResolver(getDullResolver());
 			Document doc = db.parse(file);
 			doc.getDocumentElement().normalize();
 			return doc;
@@ -62,7 +66,7 @@ public class CDAReader
 	}
 
 	/**
-	 * Retorna o valor de um atributo de um elemento, usando um valor default em sua ausência
+	 * Retorna o valor de um atributo de um elemento, usando um valor default em sua ausï¿½ncia
 	 */
 	private String getElementAttribute(Element element, String name, String defvalue)
 	{
@@ -88,7 +92,7 @@ public class CDAReader
 	}
 	
 	/**
-	 * Carrega as dependëncias de uma classe
+	 * Carrega as dependï¿½ncias de uma classe
 	 */
 	private void loadDependencies(ProjectClass aClass, Element element) throws XMLParseException
 	{
@@ -143,7 +147,7 @@ public class CDAReader
 	}
 
 	/**
-	 * Carrega os pacotes da aplicação
+	 * Carrega os pacotes da aplicaï¿½ï¿½o
 	 */
 	private void loadNamespaces(Project project, Element element) throws XMLParseException
 	{
@@ -160,7 +164,7 @@ public class CDAReader
 	}
 
 	/**
-	 * Carrega os containers da aplicação
+	 * Carrega os containers da aplicaï¿½ï¿½o
 	 */
 	private void loadContainers(Project project, Element element) throws XMLParseException
 	{
@@ -171,7 +175,7 @@ public class CDAReader
 	}
 
 	/**
-	 * Carrega uma aplicação a partir do elemento raiz do arquivo
+	 * Carrega uma aplicaï¿½ï¿½o a partir do elemento raiz do arquivo
 	 */
 	private Project loadApplication(Element root) throws XMLParseException
 	{
@@ -183,7 +187,7 @@ public class CDAReader
 	}
 
 	/**
-	 * Carrega uma aplicação a partir de um arquivo no formato XML ODEM
+	 * Carrega uma aplicaï¿½ï¿½o a partir de um arquivo no formato XML ODEM
 	 */
 	public Project execute(String filename) throws XMLParseException
 	{
@@ -194,4 +198,19 @@ public class CDAReader
 
 		return loadApplication(doc.getDocumentElement());
 	}
+
+    /**
+     * @return Um EntityResolver que nÃ£o valida DTDs (evita acesso Ã  internet para baixÃ¡-los)
+     */
+    private EntityResolver getDullResolver() {
+        return new EntityResolver() {
+            @Override
+            public InputSource resolveEntity(String publicId, String systemId) {
+                if(systemId.contains(".dtd")) {
+                    return new InputSource(new StringReader(""));
+                }
+                return null;
+            }
+        };
+    }
 }
