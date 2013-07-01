@@ -15,6 +15,7 @@ local.properties
 .classpath
 .settings/
 .loadpath
+.idea
 
 # External tool builders
 .externalToolBuilders/
@@ -49,6 +50,7 @@ x64/
 build/
 [Bb]in/
 [Oo]bj/
+out/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -77,6 +79,7 @@ build/
 *.pidb
 *.log
 *.scc
+*.iml
 
 # Visual C++ cache files
 ipch/
