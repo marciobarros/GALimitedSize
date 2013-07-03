@@ -16,17 +16,17 @@ public class HillClimbingClustering
 	/**
 	 * Best solution found by the Hill Climbing search
 	 */
-	private int[] bestSolution;
+    protected int[] bestSolution;
 
 	/**
 	 * Fitness of the best solution found
 	 */
-	private double fitness;
+    protected double fitness;
 
 	/**
 	 * Number of random restart executed
 	 */
-	private int randomRestartCount;
+    protected int randomRestartCount;
 
 	/**
 	 * Number of the random restart where the best solution was found
@@ -41,27 +41,27 @@ public class HillClimbingClustering
 	/**
 	 * Calculator used in the search process
 	 */
-	private ClusteringCalculator calculator;
+    protected ClusteringCalculator calculator;
 
 	/**
 	 * Number of classes in the project under evaluation
 	 */
-	private int classCount;
+    protected int classCount;
 
 	/**
 	 * Number of packages in the project under evaluation
 	 */
-	private int packageCount;
+    protected int packageCount;
 
 	/**
 	 * Number of fitness evaluations available in the budget
 	 */
-	private int maxEvaluations;
+    protected int maxEvaluations;
 
 	/**
 	 * Number of fitness evaluations executed
 	 */
-	private int evaluations;
+    protected int evaluations;
 
 	/**
 	 * Initializes the Hill Climbing search process
@@ -142,7 +142,7 @@ public class HillClimbingClustering
 	/**
 	 * Copies a source solution to a target one
 	 */
-	private void copySolution(int[] source, int[] target)
+    protected void copySolution(int[] source, int[] target)
 	{
 		for (int i = 0; i < classCount; i++)
 			target[i] = source[i];
@@ -151,7 +151,7 @@ public class HillClimbingClustering
 	/**
 	 * Applies a solution to the clustering calculator
 	 */
-	private void applySolution(int[] solution)
+    protected void applySolution(int[] solution)
 	{
 		for (int i = 0; i < classCount; i++)
 			calculator.moveClass(i, solution[i]);
@@ -160,7 +160,7 @@ public class HillClimbingClustering
 	/**
 	 * Evaluates the fitness of a solution, saving detail information
 	 */
-	private double evaluate()
+    protected double evaluate()
 	{
 		double fit = calculator.calculateModularizationQuality();
 
@@ -173,7 +173,7 @@ public class HillClimbingClustering
 	/**
 	 * Runs a neighborhood visit starting from a given solution
 	 */
-	private NeighborhoodVisitorResult visitNeighbors(int[] solution)
+	protected NeighborhoodVisitorResult visitNeighbors(int[] solution)
 	{
 		applySolution(solution);
 		double startingFitness = evaluate();
@@ -213,7 +213,7 @@ public class HillClimbingClustering
 	/**
 	 * Performs the local search starting from a given solution
 	 */
-	private boolean localSearch(int[] solution)
+    protected boolean localSearch(int[] solution)
 	{
 		NeighborhoodVisitorResult result;
 		
