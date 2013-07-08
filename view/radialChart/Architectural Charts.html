@@ -1,0 +1,77 @@
+<html>
+<script type="text/javascript" src="jquery.min.js"></script>
+
+<script type="text/javascript">
+function sign(x) { return x >= 0 ? 1 : -1; }
+
+$(function () {
+	$("#submit").click(function() {
+		$("#canvas").html("");
+		
+		var text = $("#data").val();
+		var lines = text.split("\n");
+		var packageCount = (lines.length-1);
+		
+		var result = "<svg>";
+
+		var w = $("#canvas").width();
+		var h = $("#canvas").height();
+		var f = h / 100.0;
+
+		for (i = 0; i < packageCount; i++)
+		{
+			var x = Math.sin(2 * 3.1415 * i / packageCount) * 40;
+			var y = Math.cos(2 * 3.1415 * i / packageCount) * 40;
+			var xpos = x + 50;
+			var ypos = y + 50;
+			result += "<rect x='" + xpos*f + "' y='" + ypos*f + "' width='3' height='3' style='fill: white; stroke: black; stroke-width: 1;' />";
+			result += "<text x='" + (xpos*f+5*sign(x)) + "' y='" + (ypos*f+8*sign(y)) + "' fill='green' style='font: 8px arial;'>" + i + "</text>";
+		}
+
+		for (i = 0; i < packageCount; i++)
+		{	
+			tokens = lines[i].split(";");
+
+			var xs = Math.sin(2 * 3.1415 * i / packageCount) * 40 + 50;
+			var ys = Math.cos(2 * 3.1415 * i / packageCount) * 40 + 50;
+
+			for (j = 1; j < tokens.length; j++)
+			{
+				target = parseInt(tokens[j]);
+				var xt = Math.sin(2 * 3.1415 * target / packageCount) * 40 + 50;
+				var yt = Math.cos(2 * 3.1415 * target / packageCount) * 40 + 50;
+				result += "<line x1='" + (xs*f+1) + "' y1='" + (ys*f+1) + "' x2='" + (xt*f+1) + "' y2='" + (yt*f+1) + "' style='fill: white; stroke: red; stroke-width: 1;' />";
+			}
+		}
+
+		result += "</svg>";
+		$("#canvas").html(result);
+	});
+
+	$("#submit").trigger('click');
+});
+</script>
+
+<body>
+<table style="width: 100%;">
+<tr>
+<td valign="top">
+<textarea id="data" style="width: 500px; height: 500px;">
+org.apache.tools.ant; 3; 4
+org.apache.tools.ant.taskdefs; 0; 3; 4; 2; 6; 7
+org.apache.tools.ant.taskdefs.compilers; 1; 0; 3
+org.apache.tools.ant.types; 0; 4
+org.apache.tools.ant.util; 5; 0
+org.apache.tools.ant.util.regexp; 0
+org.apache.tools.mail
+org.apache.tools.tar		
+</textarea><br>
+<button id="submit">Submit</button>
+</td>
+<td valign="top">
+<div id="canvas" style="width: 500px; height: 500px; border: 1px solid black;"/>
+</td>
+</tr>
+</table>
+</body>
+</html>
