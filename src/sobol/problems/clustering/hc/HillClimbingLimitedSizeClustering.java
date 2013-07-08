@@ -170,7 +170,7 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
                     calculator.moveClass(i, j);
                     int[] tmpSolution = calculator.getSolution();
 
-                   // if(isSolutionValid(tmpSolution)) {
+                    if(isSolutionValid(tmpSolution)) {
                         double neighborFitness = evaluate();
 
                         if (evaluations > maxEvaluations)
@@ -183,11 +183,11 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
                         }
                         else
                             calculator.moveClass(i, solution[i]);
-//                    }
-//                    else
-//                    {
-//                        calculator.moveClass(i, solution[i]);
-//                    }
+                    }
+                    else
+                    {
+                        calculator.moveClass(i, solution[i]);
+                    }
                 }
             }
         }
