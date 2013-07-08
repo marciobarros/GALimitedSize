@@ -45,4 +45,8 @@ class HaltonRandomGenerator implements AbstractRandomGenerator
 	{
 		return sequences.get(0).next();
 	}
+
+    public int singleInt(int minBound, int maxBound) {
+        return minBound + (int)(singleDouble() * (maxBound - minBound));
+    }
 }

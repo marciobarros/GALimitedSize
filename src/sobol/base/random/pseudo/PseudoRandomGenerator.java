@@ -35,4 +35,8 @@ class PseudoRandomGenerator implements AbstractRandomGenerator
 	{
 		return PseudoRandom.randDouble(0, 1);
 	}
+
+    public int singleInt(int minBound, int maxBound) {
+        return PseudoRandom.randInt(minBound, maxBound);
+    }
 }

@@ -5,8 +5,7 @@ import sobol.base.random.generic.AbstractRandomGenerator;
 import sobol.problems.clustering.generic.model.Project;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Hill Climbing algorithm with a maximum/minimum interval for each cluster size.
@@ -15,6 +14,8 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
 
     private int minClusterSize;
     private int maxClusterSize;
+    private int clusterCount;
+    private AbstractRandomGenerator random;
 
     /**
      * Initializes the Hill Climbing search process
@@ -30,10 +31,13 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
 
         if(minClusterSize > maxClusterSize) {
             throw new IllegalArgumentException("minClusterSize cannot be bigger than maxClusterSize");
+        } else if(classCount < minClusterSize || classCount < maxClusterSize) {
+            throw new IllegalArgumentException("Impossible to create clusters with given minClusterSize/maxClusterSize. classCount too small");
         }
 
         this.minClusterSize = minClusterSize;
         this.maxClusterSize = maxClusterSize;
+        random = RandomGeneratorFactory.createForPopulation(classCount);
     }
 
     /**
@@ -54,11 +58,10 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
     @Override
     public int[] execute() throws Exception
     {
-        AbstractRandomGenerator random = RandomGeneratorFactory.createForPopulation(classCount);
-
-        this.bestSolution = random.randInt(0, packageCount - 1);
+        this.bestSolution = generateSolution();
         applySolution(bestSolution);
         this.fitness = evaluate();
+
 
         int[] solution = new int[classCount];
         copySolution(bestSolution, solution);
@@ -66,10 +69,81 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
         while (localSearch(solution))
         {
             this.randomRestartCount++;
-            solution = random.randInt(0, packageCount - 1);
+            solution = generateSolution();
         }
 
         return bestSolution;
+    }
+
+    private int[] generateSolution() {
+        int[] solution = new int[classCount];
+        int numberOfClusters = selectNumberOfClusters(classCount, minClusterSize, maxClusterSize);
+        this.clusterCount = numberOfClusters;
+        List<Integer> listOfClasses = generateIntegerListWithSize(classCount);
+        Map<Integer, Integer> clusters = generateEmptyClusters(numberOfClusters);
+
+        //select minClusterSize classes for each cluster
+        for(Map.Entry<Integer, Integer> cluster : clusters.entrySet()) {
+            while(cluster.getValue() < minClusterSize) {
+                int position = random.singleInt(0, listOfClasses.size()-1);
+                Integer clazz = listOfClasses.remove(position);
+                solution[clazz] = cluster.getKey();
+                cluster.setValue(cluster.getValue()+1);
+            }
+        }
+
+        //select a cluster for each remaining class
+        for (Integer clazz : listOfClasses) {
+            int cluster = selectRandomCluster(clusters, maxClusterSize);
+            solution[clazz] =  cluster;
+            clusters.put(cluster, clusters.get(cluster)+1);
+        }
+
+        return solution;
+    }
+
+    private int selectRandomCluster(Map<Integer, Integer> clusters, int maxClusterSize) {
+        List<Integer> clustersNotFull = new LinkedList<Integer>();
+
+        for(Map.Entry<Integer,Integer> cluster : clusters.entrySet()) {
+            if(cluster.getValue() < maxClusterSize)  {
+                clustersNotFull.add(cluster.getKey());
+            }
+        }
+
+        int position = random.singleInt(0, clustersNotFull.size()-1);
+        return clustersNotFull.get(position);
+    }
+
+    private int selectNumberOfClusters(int classCount, int minClusterSize, int maxClusterSize) {
+        int maxAllowedNumber = classCount;
+        int minAllowedSize = 1;
+
+        while((maxAllowedNumber * minClusterSize) > classCount)
+            maxAllowedNumber--;
+
+        while ((minAllowedSize * maxClusterSize) < classCount)
+            minAllowedSize++;
+
+        return random.singleInt(minAllowedSize, maxAllowedNumber);
+    }
+
+    private List<Integer> generateIntegerListWithSize(int classCount) {
+        List<Integer> list = new LinkedList<Integer>();
+        for(int idx = 0; idx < classCount; idx++) {
+            list.add(idx);
+        }
+
+        return list;
+    }
+
+    private Map<Integer, Integer> generateEmptyClusters(int number) {
+        Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+        for(int idx = 0; idx < number; idx++) {
+            map.put(idx, 0);
+        }
+
+        return map;
     }
 
     /**
@@ -89,23 +163,31 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
 
         for (int i = 0; i < classCount; i++)
         {
-            for (int j = 0; j < packageCount; j++)
+            for (int j = 0; j < clusterCount; j++)
             {
                 if (solution[i] != j)
                 {
                     calculator.moveClass(i, j);
-                    double neighborFitness = evaluate();
+                    int[] tmpSolution = calculator.getSolution();
 
-                    if (evaluations > maxEvaluations)
-                        return new NeighborhoodVisitorResult(NeighborhoodVisitorStatus.SEARCH_EXHAUSTED);
+                   // if(isSolutionValid(tmpSolution)) {
+                        double neighborFitness = evaluate();
 
-                    if (neighborFitness > startingFitness)
-                    {
-                        solution[i] = j;
-                        return new NeighborhoodVisitorResult(NeighborhoodVisitorStatus.FOUND_BETTER_NEIGHBOR, neighborFitness);
-                    }
-                    else
-                        calculator.moveClass(i, solution[i]);
+                        if (evaluations > maxEvaluations)
+                            return new NeighborhoodVisitorResult(NeighborhoodVisitorStatus.SEARCH_EXHAUSTED);
+
+                        if (neighborFitness > startingFitness)
+                        {
+                            solution[i] = j;
+                            return new NeighborhoodVisitorResult(NeighborhoodVisitorStatus.FOUND_BETTER_NEIGHBOR, neighborFitness);
+                        }
+                        else
+                            calculator.moveClass(i, solution[i]);
+//                    }
+//                    else
+//                    {
+//                        calculator.moveClass(i, solution[i]);
+//                    }
                 }
             }
         }

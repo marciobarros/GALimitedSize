@@ -4,18 +4,18 @@ import sobol.problems.clustering.generic.model.Project;
 import sobol.problems.clustering.generic.model.ProjectClass;
 
 /**
- * DEFINICÕES:
+ * DEFINICï¿½ES:
  * 
- * - acoplamento = número de dependências que as classes de um pacote possuem com classes de fora
+ * - acoplamento = nï¿½mero de dependï¿½ncias que as classes de um pacote possuem com classes de fora
  *   do pacote. Deve ser minimizado.
  *   
- * - coesão = número de dependências que as classes de um pacote possuem com outras classes do
+ * - coesï¿½o = nï¿½mero de dependï¿½ncias que as classes de um pacote possuem com outras classes do
  *   mesmo pacote. Deve ser maximizado (ou seja, minimizamos seu valor com sinal invertido)
  *   
- * - spread = partindo de zero e percorrendo cada pacote, acumula o quadrado da diferença entre
- *   o número de classes do pacote e o número de classes do menor pacote
+ * - spread = partindo de zero e percorrendo cada pacote, acumula o quadrado da diferenï¿½a entre
+ *   o nï¿½mero de classes do pacote e o nï¿½mero de classes do menor pacote
  *   
- * - diferenca = diferença entre o número máximo de classes em um pacote e o número mínimo de
+ * - diferenca = diferenï¿½a entre o nï¿½mero mï¿½ximo de classes em um pacote e o nï¿½mero mï¿½nimo de
  *   classes em um pacote
  * 
  * @author Marcio Barros
@@ -84,23 +84,23 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Estima as probabilidades de distribuição de classes 
+	 * Estima as probabilidades de distribuiï¿½ï¿½o de classes 
 	 */
 	public void setClassDistributionProbabilities(int min, int expected, int max)
 	{
-		// guarda os parâmetros de distribuição de classes
+		// guarda os parï¿½metros de distribuiï¿½ï¿½o de classes
 		this.minClasses = min;
 		this.maxClasses = max;
 		this.classProbability = new double[max-min];
 		
-		// calcula a altura da distribuição triangular
+		// calcula a altura da distribuiï¿½ï¿½o triangular
 		double height = 2.0 / (max - min); 
 		
-		// calcula a equação da reta da esquerda
+		// calcula a equaï¿½ï¿½o da reta da esquerda
 		double al = height / (expected - min);
 		double bl = -min * al;
 		
-		// calcula a equação da reta da direita
+		// calcula a equaï¿½ï¿½o da reta da direita
 		double ar = -height / (max - expected);
 		double br = -max * ar;
 		
@@ -113,7 +113,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Estima as probabilidades de distribuição de classes 
+	 * Estima as probabilidades de distribuiï¿½ï¿½o de classes 
 	 */
 	private double calculateClassCountProbabilities(int count)
 	{
@@ -124,7 +124,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Inicializa o processo de cálculo
+	 * Inicializa o processo de cï¿½lculo
 	 */
 	public void reset()
 	{
@@ -151,7 +151,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Retorna o número de classes de um pacote
+	 * Retorna o nï¿½mero de classes de um pacote
 	 */
 	public int getClassCount(int packageIndex)
 	{
@@ -159,7 +159,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Retorna o número de movimentos de classes
+	 * Retorna o nï¿½mero de movimentos de classes
 	 */
 	public int getMoveCount(int packageIndex)
 	{
@@ -173,7 +173,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Retorna o número de movimentos de classes
+	 * Retorna o nï¿½mero de movimentos de classes
 	 */
 	public int getMoveCount()
 	{
@@ -187,7 +187,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Retorna o número de movimentos de classes
+	 * Retorna o nï¿½mero de movimentos de classes
 	 */
 	private int getMinimumClassCount()
 	{
@@ -205,7 +205,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Retorna o número de movimentos de classes
+	 * Retorna o nï¿½mero de movimentos de classes
 	 */
 	private int getMaximumClassCount()
 	{
@@ -223,7 +223,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Retorna o número de pacotes com mais de uma classe
+	 * Retorna o nï¿½mero de pacotes com mais de uma classe
 	 */
 	public int getPackageCount()
 	{
@@ -237,7 +237,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Calcula o numero de dependências com origem em um dado pacote e término em outro de um pacote
+	 * Calcula o numero de dependï¿½ncias com origem em um dado pacote e tï¿½rmino em outro de um pacote
 	 */
 	protected int countOutboundEdges(int packageIndex)
 	{
@@ -259,7 +259,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Calcula o numero de dependências com um pacote e término em um dado pacote
+	 * Calcula o numero de dependï¿½ncias com um pacote e tï¿½rmino em um dado pacote
 	 */
 	protected int countInboundEdges(int packageIndex)
 	{
@@ -281,7 +281,7 @@ public class ClusteringCalculator
 	}
 	
 	/**
-	 * Calcula o número de dependências internas de um pacote
+	 * Calcula o nï¿½mero de dependï¿½ncias internas de um pacote
 	 */
 	protected int countIntraEdges(int packageIndex)
 	{
@@ -303,7 +303,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Retorna a dispersão da distribuição de classes em pacotes
+	 * Retorna a dispersï¿½o da distribuiï¿½ï¿½o de classes em pacotes
 	 */
 	public int calculateDifference()
 	{
@@ -313,7 +313,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Retorna a dispersão da distribuição de classes em pacotes
+	 * Retorna a dispersï¿½o da distribuiï¿½ï¿½o de classes em pacotes
 	 */
 	public double calculateSpread()
 	{
@@ -349,7 +349,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Calcula a coesão do projeto
+	 * Calcula a coesï¿½o do projeto
 	 */
 	public int calculateCohesion()
 	{
@@ -441,7 +441,7 @@ public class ClusteringCalculator
 	}
 
 	/**
-	 * Calcula o fator de distribuição de classes 
+	 * Calcula o fator de distribuiï¿½ï¿½o de classes 
 	 */
 	public double calculateClassDistributionFactor()
 	{
@@ -455,4 +455,9 @@ public class ClusteringCalculator
 
 		return cdf;
 	}
+
+    public int[] getSolution()
+    {
+        return newPackage;
+    }
 }
