@@ -75,6 +75,9 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
         return bestSolution;
     }
 
+    /**
+     * Generates an initial solution respecting the minClusterSize and maxClusterSize constraints.
+     */
     private int[] generateSolution() {
         int[] solution = new int[classCount];
         int numberOfClusters = selectNumberOfClusters(classCount, minClusterSize, maxClusterSize);
@@ -102,6 +105,9 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
         return solution;
     }
 
+    /**
+     * Return a cluster that is not full yet.
+     */
     private int selectRandomCluster(Map<Integer, Integer> clusters, int maxClusterSize) {
         List<Integer> clustersNotFull = new LinkedList<Integer>();
 
@@ -115,6 +121,10 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
         return clustersNotFull.get(position);
     }
 
+    /**
+     * Generate the effective maximum/minimum cluster sized based on number of classes
+     * of a instance.
+     */
     private int selectNumberOfClusters(int classCount, int minClusterSize, int maxClusterSize) {
         int maxAllowedNumber = classCount;
         int minAllowedSize = 1;
@@ -128,6 +138,9 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
         return random.singleInt(minAllowedSize, maxAllowedNumber);
     }
 
+    /**
+     * Return a sequential list going from 0 to classCount-1
+     */
     private List<Integer> generateIntegerListWithSize(int classCount) {
         List<Integer> list = new LinkedList<Integer>();
         for(int idx = 0; idx < classCount; idx++) {
@@ -137,6 +150,9 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
         return list;
     }
 
+    /**
+     * Return a map with 'number' empty clusters.
+     */
     private Map<Integer, Integer> generateEmptyClusters(int number) {
         Map<Integer, Integer> map = new HashMap<Integer, Integer>();
         for(int idx = 0; idx < number; idx++) {
