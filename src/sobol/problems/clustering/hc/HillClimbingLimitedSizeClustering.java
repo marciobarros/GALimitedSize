@@ -2,6 +2,7 @@ package sobol.problems.clustering.hc;
 
 import sobol.base.random.RandomGeneratorFactory;
 import sobol.base.random.generic.AbstractRandomGenerator;
+import sobol.problems.clustering.generic.calculator.ICalculadorIncremental;
 import sobol.problems.clustering.generic.model.Project;
 
 import java.io.PrintWriter;
@@ -26,8 +27,8 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
      * @param minClusterSize Minimum size of each cluster
      * @param maxClusterSize Maximum size of each cluster
      */
-    public HillClimbingLimitedSizeClustering(PrintWriter detailsFile, Project project, int maxEvaluations, int minClusterSize, int maxClusterSize) throws Exception {
-        super(detailsFile, project, maxEvaluations);
+    public HillClimbingLimitedSizeClustering(PrintWriter detailsFile, ICalculadorIncremental calculador, Project project, int maxEvaluations, int minClusterSize, int maxClusterSize) throws Exception {
+        super(detailsFile, calculador, project, maxEvaluations);
 
         if(minClusterSize > maxClusterSize) {
             throw new IllegalArgumentException("minClusterSize cannot be bigger than maxClusterSize");
@@ -48,8 +49,8 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
      * @param minClusterSize Minimum size of each cluster
      * @param maxClusterSize Maximum size of each cluster
      */
-    public HillClimbingLimitedSizeClustering(Project project, int maxEvaluations, int minClusterSize, int maxClusterSize) throws Exception {
-        this(null, project, maxEvaluations, minClusterSize, maxClusterSize);
+    public HillClimbingLimitedSizeClustering(Project project, ICalculadorIncremental calculator, int maxEvaluations, int minClusterSize, int maxClusterSize) throws Exception {
+        this(null, calculator, project, maxEvaluations, minClusterSize, maxClusterSize);
     }
 
     /**
@@ -59,7 +60,7 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
     public int[] execute() throws Exception
     {
         this.bestSolution = generateSolution();
-        applySolution(bestSolution);
+        this.calculator.moveAll(bestSolution);
         this.fitness = evaluate();
 
 
@@ -168,7 +169,7 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
     @Override
     protected NeighborhoodVisitorResult visitNeighbors(int[] solution)
     {
-        applySolution(solution);
+        this.calculator.moveAll(solution);
         double startingFitness = evaluate();
 
         if (evaluations > maxEvaluations)
@@ -210,6 +211,7 @@ public class HillClimbingLimitedSizeClustering extends HillClimbingClustering {
 
         return new NeighborhoodVisitorResult(NeighborhoodVisitorStatus.NO_BETTER_NEIGHBOR);
     }
+
 
     /**
      * Checks if a given solution satisfies the size constraints regarding clusters' size

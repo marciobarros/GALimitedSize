@@ -16,7 +16,7 @@ class Sobol
 	/**
 	 * Name of the file containing SOBOL sequence generation data 
 	 */
-	private static String SOBOL_FILENAME = "data\\sobol\\new-joe-kuo-6.21201";
+	private static String SOBOL_FILENAME = "data//sobol//new-joe-kuo-6.21201";
 	
 	/**
 	 * Memory representation for SOBOL sequence generation data
