@@ -24,6 +24,11 @@ class FaureRandomGenerator implements AbstractRandomGenerator
 		return result;
 	}
 
+    public int singleInt(int minBound, int maxBound)
+    {
+        return minBound + (int)(singleDouble() * (maxBound - minBound));
+    }
+
 	public double[] randDouble()
 	{
 		return generator.next();

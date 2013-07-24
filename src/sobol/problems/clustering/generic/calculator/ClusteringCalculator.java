@@ -4,455 +4,456 @@ import sobol.problems.clustering.generic.model.Project;
 import sobol.problems.clustering.generic.model.ProjectClass;
 
 /**
- * DEFINICÕES:
- * 
- * - acoplamento = número de dependências que as classes de um pacote possuem com classes de fora
+ * DEFINICÃ•ES:
+ *
+ * - acoplamento = nÃºmero de dependÃªncias que as classes de um pacote possuem com classes de fora
  *   do pacote. Deve ser minimizado.
- *   
- * - coesão = número de dependências que as classes de um pacote possuem com outras classes do
+ *
+ * - coesÃ£o = nÃºmero de dependÃªncias que as classes de um pacote possuem com outras classes do
  *   mesmo pacote. Deve ser maximizado (ou seja, minimizamos seu valor com sinal invertido)
- *   
- * - spread = partindo de zero e percorrendo cada pacote, acumula o quadrado da diferença entre
- *   o número de classes do pacote e o número de classes do menor pacote
- *   
- * - diferenca = diferença entre o número máximo de classes em um pacote e o número mínimo de
+ *
+ * - spread = partindo de zero e percorrendo cada pacote, acumula o quadrado da diferenÃ§a entre
+ *   o nÃºmero de classes do pacote e o nÃºmero de classes do menor pacote
+ *
+ * - diferenca = diferenÃ§a entre o nÃºmero mÃ¡ximo de classes em um pacote e o nÃºmero mÃ­nimo de
  *   classes em um pacote
- * 
+ *
  * @author Marcio Barros
  */
 public class ClusteringCalculator
 {
-	private int classCount;
-	private int packageCount;
+    private int classCount;
+    private int packageCount;
 
-	private int[][] dependencies;
-	private int[] originalPackage;
-	private int[] newPackage;
-	private int[] originalClasses;
-	private int[] newClasses;
+    private int[][] dependencies;
+    private int[] originalPackage;
+    private int[] newPackage;
+    private int[] originalClasses;
+    private int[] newClasses;
 
-	private int minClasses;
-	private int maxClasses;
-	private double[] classProbability;
+    private int minClasses;
+    private int maxClasses;
+    private double[] classProbability;
 
-	/**
-	 * Inicializa o calculador de acoplamento
-	 */
-	public ClusteringCalculator(Project project, int packageCount) throws Exception
-	{
-		this.classCount = project.getClassCount();
-		this.packageCount = packageCount;
-		this.minClasses = this.maxClasses = 0;
-		this.classProbability = null;
-		prepareClasses(project);
-	}
-	
-	/**
-	 * Prepara as classes para serem processadas pelo programa
-	 */
-	public void prepareClasses(Project project) throws Exception
-	{
-		this.dependencies = new int[classCount][classCount];
-		
-		this.originalPackage = new int[classCount];
-		this.newPackage = new int[classCount];
-		
-		this.originalClasses = new int[packageCount];
-		this.newClasses = new int[packageCount];
+    /**
+     * Inicializa o calculador de acoplamento
+     */
+    public ClusteringCalculator(Project project, int packageCount) throws Exception
+    {
+        this.classCount = project.getClassCount();
+        this.packageCount = packageCount;
+        this.minClasses = this.maxClasses = 0;
+        this.classProbability = null;
+        prepareClasses(project);
+    }
 
-		for (int i = 0; i < classCount; i++)
-		{
-			ProjectClass _class = project.getClassIndex(i);
-			int sourcePackageIndex = project.getIndexForPackage(_class.getPackage());
-			
-			this.originalPackage[i] = sourcePackageIndex;
-			this.newPackage[i] = sourcePackageIndex;
-			this.originalClasses[sourcePackageIndex]++;
-			this.newClasses[sourcePackageIndex]++; 
+    /**
+     * Prepara as classes para serem processadas pelo programa
+     */
+    public void prepareClasses(Project project) throws Exception
+    {
+        this.dependencies = new int[classCount][classCount];
 
-			for (int j = 0; j < _class.getDependencyCount(); j++)
-			{
-				String targetName = _class.getDependencyIndex(j).getElementName();
-				int classIndex = project.getClassIndex(targetName);
-				
-				if (classIndex == -1)
-					throw new Exception ("Class not registered in project: " + targetName);
-				
-				dependencies[i][classIndex]++;
-			}
-		}
-	}
+        this.originalPackage = new int[classCount];
+        this.newPackage = new int[classCount];
 
-	/**
-	 * Estima as probabilidades de distribuição de classes 
-	 */
-	public void setClassDistributionProbabilities(int min, int expected, int max)
-	{
-		// guarda os parâmetros de distribuição de classes
-		this.minClasses = min;
-		this.maxClasses = max;
-		this.classProbability = new double[max-min];
-		
-		// calcula a altura da distribuição triangular
-		double height = 2.0 / (max - min); 
-		
-		// calcula a equação da reta da esquerda
-		double al = height / (expected - min);
-		double bl = -min * al;
-		
-		// calcula a equação da reta da direita
-		double ar = -height / (max - expected);
-		double br = -max * ar;
-		
-		// estima as probabilidades
-		for (int i = min; i < expected; i++)
-			this.classProbability[i-min] = al / 2 * (i + 1) * (i + 1) + bl * (i + 1) - al / 2 * i * i - bl * i;
-		
-		for (int i = expected; i < max; i++)
-			this.classProbability[i-min] = ar / 2 * (i + 1) * (i + 1) + br * (i + 1) - ar / 2 * i * i - br * i;
-	}
+        this.originalClasses = new int[packageCount];
+        this.newClasses = new int[packageCount];
 
-	/**
-	 * Estima as probabilidades de distribuição de classes 
-	 */
-	private double calculateClassCountProbabilities(int count)
-	{
-		if (count < this.minClasses || count >= this.maxClasses)
-			return 0.0;
-		else
-			return classProbability[count - this.minClasses]; 
-	}
+        for (int i = 0; i < classCount; i++)
+        {
+            ProjectClass _class = project.getClassIndex(i);
+            int sourcePackageIndex = project.getIndexForPackage(_class.getPackage());
 
-	/**
-	 * Inicializa o processo de cálculo
-	 */
-	public void reset()
-	{
-		for (int i = 0; i < classCount; i++)
-			newPackage[i] = originalPackage[i];
+            this.originalPackage[i] = sourcePackageIndex;
+            this.newPackage[i] = sourcePackageIndex;
+            this.originalClasses[sourcePackageIndex]++;
+            this.newClasses[sourcePackageIndex]++;
 
-		for (int i = 0; i < packageCount; i++)
-			newClasses[i] = originalClasses[i];
-	}
+            for (int j = 0; j < _class.getDependencyCount(); j++)
+            {
+                String targetName = _class.getDependencyIndex(j).getElementName();
+                int classIndex = project.getClassIndex(targetName);
 
-	/**
-	 * Move uma classe para um pacote
-	 */
-	public void moveClass(int classIndex, int packageIndex)
-	{
-		int actualPackage = newPackage[classIndex];
-		
-		if (actualPackage != packageIndex)
-		{
-			newClasses[actualPackage]--;
-			newPackage[classIndex] = packageIndex;
-			newClasses[packageIndex]++;
-		}
-	}
+                if (classIndex == -1)
+                    throw new Exception ("Class not registered in project: " + targetName);
 
-	/**
-	 * Retorna o número de classes de um pacote
-	 */
-	public int getClassCount(int packageIndex)
-	{
-		return newClasses[packageIndex];
-	}
+                dependencies[i][classIndex]++;
+            }
+        }
+    }
 
-	/**
-	 * Retorna o número de movimentos de classes
-	 */
-	public int getMoveCount(int packageIndex)
-	{
-		int count = 0;
-		
-		for (int i = 0; i < classCount; i++)
-			if (originalPackage[i] == packageIndex && newPackage[i] != packageIndex)
-				count++;
+    /**
+     * Estima as probabilidades de distribuiÃ§Ã£o de classes
+     */
+    public void setClassDistributionProbabilities(int min, int expected, int max)
+    {
+        // guarda os parÃ¢metros de distribuiÃ§Ã£o de classes
+        this.minClasses = min;
+        this.maxClasses = max;
+        this.classProbability = new double[max-min];
 
-		return count;
-	}
+        // calcula a altura da distribuiÃ§Ã£o triangular
+        double height = 2.0 / (max - min);
 
-	/**
-	 * Retorna o número de movimentos de classes
-	 */
-	public int getMoveCount()
-	{
-		int count = 0;
+        // calcula a equaÃ§Ã£o da reta da esquerda
+        double al = height / (expected - min);
+        double bl = -min * al;
 
-		for (int i = 0; i < classCount; i++)
-			if (originalPackage[i] != newPackage[i])
-				count++;
+        // calcula a equaÃ§Ã£o da reta da direita
+        double ar = -height / (max - expected);
+        double br = -max * ar;
 
-		return count;
-	}
+        // estima as probabilidades
+        for (int i = min; i < expected; i++)
+            this.classProbability[i-min] = al / 2 * (i + 1) * (i + 1) + bl * (i + 1) - al / 2 * i * i - bl * i;
 
-	/**
-	 * Retorna o número de movimentos de classes
-	 */
-	private int getMinimumClassCount()
-	{
-		int min = Integer.MAX_VALUE;
+        for (int i = expected; i < max; i++)
+            this.classProbability[i-min] = ar / 2 * (i + 1) * (i + 1) + br * (i + 1) - ar / 2 * i * i - br * i;
+    }
 
-		for (int i = 0; i < packageCount; i++)
-		{
-			int count = newClasses[i];
+    /**
+     * Estima as probabilidades de distribuiÃ§Ã£o de classes
+     */
+    private double calculateClassCountProbabilities(int count)
+    {
+        if (count < this.minClasses || count >= this.maxClasses)
+            return 0.0;
+        else
+            return classProbability[count - this.minClasses];
+    }
 
-			if (count < min)
-				min = count;
-		}
+    /**
+     * Inicializa o processo de cÃ¡lculo
+     */
+    public void reset()
+    {
+        for (int i = 0; i < classCount; i++)
+            newPackage[i] = originalPackage[i];
 
-		return min;
-	}
+        for (int i = 0; i < packageCount; i++)
+            newClasses[i] = originalClasses[i];
+    }
 
-	/**
-	 * Retorna o número de movimentos de classes
-	 */
-	private int getMaximumClassCount()
-	{
-		int max = Integer.MIN_VALUE;
+    /**
+     * Move uma classe para um pacote
+     */
+    public void moveClass(int classIndex, int packageIndex)
+    {
+        int actualPackage = newPackage[classIndex];
 
-		for (int i = 0; i < packageCount; i++)
-		{
-			int count = newClasses[i];
+        if (actualPackage != packageIndex)
+        {
+            newClasses[actualPackage]--;
+            newPackage[classIndex] = packageIndex;
+            newClasses[packageIndex]++;
+        }
+    }
 
-			if (count > max)
-				max = count;
-		}
+    /**
+     * Retorna o nÃºmero de classes de um pacote
+     */
+    public int getClassCount(int packageIndex)
+    {
+        return newClasses[packageIndex];
+    }
 
-		return max;
-	}
+    /**
+     * Retorna o nÃºmero de movimentos de classes
+     */
+    public int getMoveCount(int packageIndex)
+    {
+        int count = 0;
 
-	/**
-	 * Retorna o número de pacotes com mais de uma classe
-	 */
-	public int getPackageCount()
-	{
-		int packages = 0;
-		
-		for (int i = 0; i < packageCount; i++)
-			if (newClasses[i] > 0)
-				packages++;
+        for (int i = 0; i < classCount; i++)
+            if (originalPackage[i] == packageIndex && newPackage[i] != packageIndex)
+                count++;
 
-		return packages;
-	}
+        return count;
+    }
 
-	/**
-	 * Calcula o numero de dependências com origem em um dado pacote e término em outro de um pacote
-	 */
-	protected int countOutboundEdges(int packageIndex)
-	{
-		int edges = 0;
+    /**
+     * Retorna o nÃºmero de movimentos de classes
+     */
+    public int getMoveCount()
+    {
+        int count = 0;
 
-		for (int i = 0; i < classCount; i++)
-		{
-			int currentPackage = newPackage[i];
-			
-			if (currentPackage != packageIndex)
-				continue;
-			
-			for (int j = 0; j < classCount; j++)
-				if (dependencies[i][j] > 0 && newPackage[j] != currentPackage)
-					edges++;
-		}
+        for (int i = 0; i < classCount; i++)
+            if (originalPackage[i] != newPackage[i])
+                count++;
 
-		return edges;
-	}
+        return count;
+    }
 
-	/**
-	 * Calcula o numero de dependências com um pacote e término em um dado pacote
-	 */
-	protected int countInboundEdges(int packageIndex)
-	{
-		int edges = 0;
+    /**
+     * Retorna o nÃºmero de movimentos de classes
+     */
+    private int getMinimumClassCount()
+    {
+        int min = Integer.MAX_VALUE;
 
-		for (int i = 0; i < classCount; i++)
-		{
-			int currentPackage = newPackage[i];
-			
-			if (currentPackage == packageIndex)
-				continue;
-			
-			for (int j = 0; j < classCount; j++)
-				if (dependencies[i][j] > 0 && newPackage[j] == packageIndex)
-					edges++;
-		}
+        for (int i = 0; i < packageCount; i++)
+        {
+            int count = newClasses[i];
 
-		return edges;
-	}
-	
-	/**
-	 * Calcula o número de dependências internas de um pacote
-	 */
-	protected int countIntraEdges(int packageIndex)
-	{
-		int edges = 0;
+            if (count < min)
+                min = count;
+        }
 
-		for (int i = 0; i < classCount; i++)
-		{
-			int currentPackage = newPackage[i];
-			
-			if (currentPackage != packageIndex)
-				continue;
-			
-			for (int j = 0; j < classCount; j++)
-				if (dependencies[i][j] > 0 && newPackage[j] == currentPackage)
-					edges++;
-		}
+        return min;
+    }
 
-		return edges;
-	}
+    /**
+     * Retorna o nÃºmero de movimentos de classes
+     */
+    private int getMaximumClassCount()
+    {
+        int max = Integer.MIN_VALUE;
 
-	/**
-	 * Retorna a dispersão da distribuição de classes em pacotes
-	 */
-	public int calculateDifference()
-	{
-		int min = getMinimumClassCount();
-		int max = getMaximumClassCount();
-		return max - min;
-	}
+        for (int i = 0; i < packageCount; i++)
+        {
+            int count = newClasses[i];
 
-	/**
-	 * Retorna a dispersão da distribuição de classes em pacotes
-	 */
-	public double calculateSpread()
-	{
-		int min = getMinimumClassCount();
-		double spread = 0.0;
+            if (count > max)
+                max = count;
+        }
 
-		for (int i = 0; i < packageCount; i++)
-		{
-			int count = newClasses[i];
-			spread += Math.pow(count - min, 2);
-		}
+        return max;
+    }
 
-		return spread;
-	}
+    /**
+     * Retorna o nÃºmero de pacotes com mais de uma classe
+     */
+    public int getPackageCount()
+    {
+        int packages = 0;
 
-	/**
-	 * Calcula o acoplamento do projeto
-	 */
-	public int calculateCoupling()
-	{
-		int coupling = 0;
+        for (int i = 0; i < packageCount; i++)
+            if (newClasses[i] > 0)
+                packages++;
 
-		for (int i = 0; i < classCount; i++)
-		{
-			int currentPackage = newPackage[i];
-			
-			for (int j = 0; j < classCount; j++)
-				if (dependencies[i][j] > 0 && newPackage[j] != currentPackage)
-					coupling += 2;
-		}
+        return packages;
+    }
 
-		return coupling;
-	}
+    /**
+     * Calcula o numero de dependÃªncias com origem em um dado pacote e tÃ©rmino em outro de um pacote
+     */
+    protected int countOutboundEdges(int packageIndex)
+    {
+        int edges = 0;
 
-	/**
-	 * Calcula a coesão do projeto
-	 */
-	public int calculateCohesion()
-	{
-		int cohesion = 0;
+        for (int i = 0; i < classCount; i++)
+        {
+            int currentPackage = newPackage[i];
 
-		for (int i = 0; i < classCount; i++)
-		{
-			int currentPackage = newPackage[i];
-			
-			for (int j = 0; j < classCount; j++)
-				if (dependencies[i][j] > 0 && newPackage[j] == currentPackage)
-					cohesion++;
-		}
+            if (currentPackage != packageIndex)
+                continue;
 
-		return cohesion;
-	}
+            for (int j = 0; j < classCount; j++)
+                if (dependencies[i][j] > 0 && newPackage[j] != currentPackage)
+                    edges++;
+        }
 
-	/**
-	 * Calcula o coeficiente de modularidade do projeto
-	 */
-	public double calculateModularizationQuality()
-	{
-		int[] inboundEdges = new int[packageCount];
-		int[] outboundEdges = new int[packageCount];
-		int[] intraEdges = new int[packageCount];
+        return edges;
+    }
 
-		for (int i = 0; i < classCount; i++)
-		{
-			int sourcePackage = newPackage[i];
-			
-			for (int j = 0; j < classCount; j++)
-			{
-				if (dependencies[i][j] > 0)
-				{
-					int targetPackage = newPackage[j];
-					
-					if (targetPackage != sourcePackage)
-					{
-						outboundEdges[sourcePackage]++;
-						inboundEdges[targetPackage]++;
-					}
-					else
-						intraEdges[sourcePackage]++;
-				}
-			}
-		}
-		
-		double mq = 0.0;
+    /**
+     * Calcula o numero de dependÃªncias com um pacote e tÃ©rmino em um dado pacote
+     */
+    protected int countInboundEdges(int packageIndex)
+    {
+        int edges = 0;
 
-		for (int i = 0; i < packageCount; i++)
-		{
-			int inter = inboundEdges[i] + outboundEdges[i];
-			int intra = intraEdges[i];
-			
-			if (intra != 0 && inter != 0)
-			{
-				double mf = intra / (intra + 0.5 * inter);
-				mq += mf;
-			}
-		}
+        for (int i = 0; i < classCount; i++)
+        {
+            int currentPackage = newPackage[i];
 
-		return mq;
-	}
+            if (currentPackage == packageIndex)
+                continue;
 
-	/**
-	 * Calcula o EVM do projeto
-	 */
-	public int calculateEVM()
-	{
-		int evm = 0;
+            for (int j = 0; j < classCount; j++)
+                if (dependencies[i][j] > 0 && newPackage[j] == packageIndex)
+                    edges++;
+        }
 
-		for (int i = 0; i < classCount-1; i++)
-		{
-			int sourcePackage = newPackage[i];
-			
-			for (int j = i+1; j < classCount; j++)
-			{
-				int targetPackage = newPackage[j];
+        return edges;
+    }
 
-				if (targetPackage == sourcePackage)
-					if (dependencies[i][j] > 0 || dependencies[j][i] > 0) 
-						evm++;
-					else
-						evm--; 
-			}
-		}
+    /**
+     * Calcula o nÃºmero de dependÃªncias internas de um pacote
+     */
+    protected int countIntraEdges(int packageIndex)
+    {
+        int edges = 0;
 
-		return evm;
-	}
+        for (int i = 0; i < classCount; i++)
+        {
+            int currentPackage = newPackage[i];
 
-	/**
-	 * Calcula o fator de distribuição de classes 
-	 */
-	public double calculateClassDistributionFactor()
-	{
-		double cdf = 0.0;
+            if (currentPackage != packageIndex)
+                continue;
 
-		for (int i = 0; i < packageCount; i++)
-		{
-			int count = getClassCount(i);
-			cdf += calculateClassCountProbabilities(count);
-		}
+            for (int j = 0; j < classCount; j++)
+                if (dependencies[i][j] > 0 && newPackage[j] == currentPackage)
+                    edges++;
+        }
 
-		return cdf;
-	}
+        return edges;
+    }
+
+    /**
+     * Retorna a dispersÃ£o da distribuiÃ§Ã£o de classes em pacotes
+     */
+    public int calculateDifference()
+    {
+        int min = getMinimumClassCount();
+        int max = getMaximumClassCount();
+        return max - min;
+    }
+
+    /**
+     * Retorna a dispersÃ£o da distribuiÃ§Ã£o de classes em pacotes
+     */
+    public double calculateSpread()
+    {
+        int min = getMinimumClassCount();
+        double spread = 0.0;
+
+        for (int i = 0; i < packageCount; i++)
+        {
+            int count = newClasses[i];
+            spread += Math.pow(count - min, 2);
+        }
+
+        return spread;
+    }
+
+    /**
+     * Calcula o acoplamento do projeto
+     */
+    public int calculateCoupling()
+    {
+        int coupling = 0;
+
+        for (int i = 0; i < classCount; i++)
+        {
+            int currentPackage = newPackage[i];
+
+            for (int j = 0; j < classCount; j++)
+                if (dependencies[i][j] > 0 && newPackage[j] != currentPackage)
+                    coupling += 2;
+        }
+
+        return coupling;
+    }
+
+    /**
+     * Calcula a coesÃ£o do projeto
+     */
+    public int calculateCohesion()
+    {
+        int cohesion = 0;
+
+        for (int i = 0; i < classCount; i++)
+        {
+            int currentPackage = newPackage[i];
+
+            for (int j = 0; j < classCount; j++)
+                if (dependencies[i][j] > 0 && newPackage[j] == currentPackage)
+                    cohesion++;
+        }
+
+        return cohesion;
+    }
+
+    /**
+     * Calcula o coeficiente de modularidade do projeto
+     */
+    public double calculateModularizationQuality()
+    {
+        int[] inboundEdges = new int[packageCount];
+        int[] outboundEdges = new int[packageCount];
+        int[] intraEdges = new int[packageCount];
+
+        for (int i = 0; i < classCount; i++)
+        {
+            int sourcePackage = newPackage[i];
+
+            for (int j = 0; j < classCount; j++)
+            {
+                if (dependencies[i][j] > 0)
+                {
+                    int targetPackage = newPackage[j];
+
+                    if (targetPackage != sourcePackage)
+                    {
+                        outboundEdges[sourcePackage]++;
+                        inboundEdges[targetPackage]++;
+                    }
+                    else
+                        intraEdges[sourcePackage]++;
+                }
+            }
+        }
+
+        double mq = 0.0;
+
+        for (int i = 0; i < packageCount; i++)
+        {
+            int inter = inboundEdges[i] + outboundEdges[i];
+            int intra = intraEdges[i];
+
+            if (intra != 0 && inter != 0)
+            {
+                double mf = intra / (intra + 0.5 * inter);
+                mq += mf;
+            }
+        }
+
+        return mq;
+    }
+
+    /**
+     * Calcula o EVM do projeto
+     */
+    public int calculateEVM()
+    {
+        int evm = 0;
+
+        for (int i = 0; i < classCount-1; i++)
+        {
+            int sourcePackage = newPackage[i];
+
+            for (int j = i+1; j < classCount; j++)
+            {
+                int targetPackage = newPackage[j];
+
+                if (targetPackage == sourcePackage)
+                    if (dependencies[i][j] > 0 || dependencies[j][i] > 0)
+                        evm++;
+                    else
+                        evm--;
+            }
+        }
+
+        return evm;
+    }
+
+    /**
+     * Calcula o fator de distribuiÃ§Ã£o de classes
+     */
+    public double calculateClassDistributionFactor()
+    {
+        double cdf = 0.0;
+
+        for (int i = 0; i < packageCount; i++)
+        {
+            int count = getClassCount(i);
+            cdf += calculateClassCountProbabilities(count);
+        }
+
+        return cdf;
+    }
+
 }

@@ -7,4 +7,6 @@ public interface AbstractRandomGenerator
 	double[] randDouble();
 	
 	double singleDouble();
+
+    int singleInt(int minBound, int maxBound);
 }
